@@ -156,9 +156,10 @@ public sealed class ProcessServerTests
     {
         public static string Create()
         {
+            var configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name;
             var source = Path.GetFullPath(Path.Combine(
                 AppContext.BaseDirectory,
-                "..", "..", "..", "..", "Fixtures", "Aura.Runtime.DotNet.Fixture", "bin", "Debug", "net10.0",
+                "..", "..", "..", "..", "Fixtures", "Aura.Runtime.DotNet.Fixture", "bin", configuration, "net10.0",
                 "Aura.Runtime.DotNet.Fixture.dll"));
             var directory = Path.Combine(Path.GetTempPath(), "aura-dotnet-tests", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(directory);

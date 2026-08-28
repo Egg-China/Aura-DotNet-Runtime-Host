@@ -5,9 +5,11 @@ namespace Aura.Runtime.DotNet.Tests;
 
 public sealed class PayloadAssemblyTests
 {
+    private static readonly string Configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name;
+
     private static readonly string FixtureAssembly = Path.GetFullPath(Path.Combine(
         AppContext.BaseDirectory,
-        "..", "..", "..", "..", "Fixtures", "Aura.Runtime.DotNet.Fixture", "bin", "Debug", "net10.0",
+        "..", "..", "..", "..", "Fixtures", "Aura.Runtime.DotNet.Fixture", "bin", Configuration, "net10.0",
         "Aura.Runtime.DotNet.Fixture.dll"));
 
     [Fact]

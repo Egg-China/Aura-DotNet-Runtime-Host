@@ -24,7 +24,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - uses: actions/setup-dotnet@7908599e2b65cdde8e1e65dbe2d7b4d51563e89d # v5
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: 10.0.x
       - name: Restore
@@ -62,7 +62,7 @@ jobs:
           repository: ${{ env.SDK_REPOSITORY }}
           ref: ${{ env.SDK_SHA }}
           path: .ci/sdk
-      - uses: actions/setup-dotnet@7908599e2b65cdde8e1e65dbe2d7b4d51563e89d # v5
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: 10.0.x
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5

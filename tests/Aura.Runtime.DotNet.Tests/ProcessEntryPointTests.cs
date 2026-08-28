@@ -9,9 +9,10 @@ public sealed class ProcessEntryPointTests
     [Fact]
     public async Task StdioModeKeepsPayloadLogsOutOfProtocolStream()
     {
+        var configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name;
         var host = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Aura.Runtime.DotNet.Host",
-            "bin", "Debug", "net10.0", "aura-dotnet-runtime-host.dll"));
+            "bin", configuration, "net10.0", "aura-dotnet-runtime-host.dll"));
         using var process = Process.Start(new ProcessStartInfo("dotnet", $"\"{host}\" --stdio")
         {
             RedirectStandardInput = true,
@@ -63,9 +64,10 @@ public sealed class ProcessEntryPointTests
 
     private static string CreateFixturePackage()
     {
+        var configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name;
         var source = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory,
-            "..", "..", "..", "..", "Fixtures", "Aura.Runtime.DotNet.Fixture", "bin", "Debug", "net10.0",
+            "..", "..", "..", "..", "Fixtures", "Aura.Runtime.DotNet.Fixture", "bin", configuration, "net10.0",
             "Aura.Runtime.DotNet.Fixture.dll"));
         var directory = Path.Combine(Path.GetTempPath(), "aura-dotnet-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
