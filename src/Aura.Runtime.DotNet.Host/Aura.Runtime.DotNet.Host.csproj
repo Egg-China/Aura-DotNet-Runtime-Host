@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>aura-dotnet-runtime-host</AssemblyName>
+    <RootNamespace>Aura.Runtime.DotNet.Host</RootNamespace>
+    <Version>0.1.0-beta.1</Version>
+    <PublishSingleFile>false</PublishSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishAot>false</PublishAot>
+    <SelfContained Condition="'$(RuntimeIdentifier)' != ''">true</SelfContained>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Aura.Runtime.DotNet.Abstractions/Aura.Runtime.DotNet.Abstractions.csproj" />
+    <InternalsVisibleTo Include="Aura.Runtime.DotNet.Tests" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 5,
+  "id": "dev.hmclce.example.dotnet.launch-hook",
+  "name": "Aura .NET Game Launch Hook Plugin",
+  "version": "1.0.0",
+  "description": "Isolated .NET example that observes the before-game-launch Hook.",
+  "author": "Aura Launcher Community",
+  "type": "java",
+  "runtime": "dotnet",
+  "abi": 1,
+  "platforms": ["windows-x64", "windows-arm64", "linux-x64", "linux-arm64", "macos-x64", "macos-arm64"],
+  "entrypoint": "aura-dotnet.json",
+  "executionMode": "isolated",
+  "runtimeProvider": "dev.hmclce.runtime.dotnet-host",
+  "dependencies": [],
+  "permissions": ["launcher-hook"],
+  "requiredPermissions": ["launcher-hook"],
+  "hooks": ["before-game-launch"],
+  "patches": [],
+  "launcherVersion": ">=27.1-0-next"
+}

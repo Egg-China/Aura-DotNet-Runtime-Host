@@ -1,0 +1,119 @@
+name: .NET Runtime Host
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  AURA_REPOSITORY: Egg-China/Aura-Launcher
+  AURA_HEAD_SHA: 6d37f20d104c8e8d1c8b2b693ce1944207b85f84
+  AURA_RUN_ID: 33159830461
+  SDK_REPOSITORY: HMCL-Community/HMCL-CE-Plugin-SDK
+  SDK_SHA: a36719a890ed69d5db6dc126e0ebbb107a9d073b
+  HOST_VERSION: 0.1.0-beta.1
+
+jobs:
+  test:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-dotnet@7908599e2b65cdde8e1e65dbe2d7b4d51563e89d # v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore
+        run: dotnet restore tests/Aura.Runtime.DotNet.Tests/Aura.Runtime.DotNet.Tests.csproj
+      - name: Verify formatting
+        run: dotnet format tests/Aura.Runtime.DotNet.Tests/Aura.Runtime.DotNet.Tests.csproj --no-restore --verify-no-changes
+      - name: Test
+        run: dotnet test tests/Aura.Runtime.DotNet.Tests/Aura.Runtime.DotNet.Tests.csproj -c Release --no-restore --nologo
+      - name: Pack abstractions
+        run: dotnet pack src/Aura.Runtime.DotNet.Abstractions/Aura.Runtime.DotNet.Abstractions.csproj -c Release --no-restore -o .artifacts/nuget
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: dotnet-abstractions-nuget
+          path: .artifacts/nuget/*
+          if-no-files-found: error
+
+  build:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: windows-2025, platform: windows-x64, rid: win-x64 }
+          - { runner: windows-11-arm, platform: windows-arm64, rid: win-arm64 }
+          - { runner: ubuntu-24.04, platform: linux-x64, rid: linux-x64 }
+          - { runner: ubuntu-24.04-arm, platform: linux-arm64, rid: linux-arm64 }
+          - { runner: macos-15-intel, platform: macos-x64, rid: osx-x64 }
+          - { runner: macos-15, platform: macos-arm64, rid: osx-arm64 }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: ${{ env.SDK_REPOSITORY }}
+          ref: ${{ env.SDK_SHA }}
+          path: .ci/sdk
+      - uses: actions/setup-dotnet@7908599e2b65cdde8e1e65dbe2d7b4d51563e89d # v5
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: zulu
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@4c125117fe7c5aed11272ec4213f602f012f89f2 # v5
+        with:
+          gradle-version: '9.6.1'
+      - name: Verify exact Aura build and download JAR
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.AURA_REPOSITORY_TOKEN }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:GH_TOKEN)) { throw 'AURA_REPOSITORY_TOKEN is required' }
+          $run = gh api "repos/$env:AURA_REPOSITORY/actions/runs/$env:AURA_RUN_ID" | ConvertFrom-Json
+          if ($run.head_sha -cne $env:AURA_HEAD_SHA -or $run.conclusion -cne 'success' -or $run.head_branch -cne 'main') {
+              throw 'Pinned Aura run does not match the required successful main build'
+          }
+          gh run download $env:AURA_RUN_ID --repo $env:AURA_REPOSITORY `
+              --name "Aura-Launcher-$env:AURA_HEAD_SHA" --dir .ci/aura
+          $jar = @(Get-ChildItem .ci/aura -Recurse -Filter 'Aura-Launcher-*-next.jar')
+          if ($jar.Count -ne 1) { throw 'Expected exactly one Aura Next JAR' }
+          "AURA_JAR=$($jar[0].FullName)" >> $env:GITHUB_ENV
+      - name: Test Java Provider
+        shell: pwsh
+        run: gradle -p host-plugin test --no-daemon --stacktrace
+      - name: Publish self-contained process Host
+        shell: pwsh
+        run: |
+          dotnet publish src/Aura.Runtime.DotNet.Host/Aura.Runtime.DotNet.Host.csproj `
+              -c Release -r '${{ matrix.rid }}' --self-contained true `
+              -p:PublishSingleFile=false -p:PublishTrimmed=false -p:PublishAot=false `
+              -o '.artifacts/publish/${{ matrix.platform }}'
+          "AURA_DOTNET_PUBLISH_DIR=$((Resolve-Path '.artifacts/publish/${{ matrix.platform }}').Path)" >> $env:GITHUB_ENV
+          "AURA_DOTNET_PLATFORM=${{ matrix.platform }}" >> $env:GITHUB_ENV
+      - name: Package and validate NPL
+        shell: pwsh
+        run: |
+          gradle -p host-plugin packageNpl --no-daemon --stacktrace
+          $source = Resolve-Path "host-plugin/build/npl/dev.hmclce.runtime.dotnet-host-v$env:HOST_VERSION.npl"
+          [void](New-Item -ItemType Directory -Force .artifacts/output)
+          $package = ".artifacts/output/dev.hmclce.runtime.dotnet-host-v$env:HOST_VERSION-${{ matrix.platform }}.npl"
+          Copy-Item -LiteralPath $source -Destination $package
+          & ./.ci/sdk/tools/validate-npl.ps1 -Package $package
+          & ./tools/verify-dotnet-host-artifacts.ps1 -Platform '${{ matrix.platform }}' `
+              -PublishDirectory $env:AURA_DOTNET_PUBLISH_DIR -Package $package `
+              -Output ".artifacts/output/dotnet-runtime-host-${{ matrix.platform }}.json"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: dotnet-runtime-host-${{ matrix.platform }}
+          path: .artifacts/output/*
+          if-no-files-found: error
+          compression-level: 0

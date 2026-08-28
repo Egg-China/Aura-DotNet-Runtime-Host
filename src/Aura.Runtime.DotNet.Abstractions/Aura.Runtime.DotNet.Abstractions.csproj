@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Aura.Runtime.DotNet.Abstractions</AssemblyName>
+    <RootNamespace>Aura.Runtime.DotNet</RootNamespace>
+    <Version>0.1.0-beta.1</Version>
+    <PackageId>Aura.Runtime.DotNet.Abstractions</PackageId>
+    <Authors>Aura Launcher Community</Authors>
+    <Description>Language-neutral Aura Launcher .NET Runtime Host abstractions.</Description>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Egg-China/Aura-DotNet-Runtime-Host</RepositoryUrl>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageTags>aura-launcher;plugin;runtime;bridge</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>

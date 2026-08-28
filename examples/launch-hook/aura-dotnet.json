@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "assembly": "payload/Aura.DotNet.LaunchHook.dll",
+  "type": "Aura.DotNet.LaunchHook.LaunchHookPlugin"
+}

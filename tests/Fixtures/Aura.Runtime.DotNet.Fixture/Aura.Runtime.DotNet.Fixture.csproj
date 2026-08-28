@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Aura.Runtime.DotNet.Fixture</AssemblyName>
+    <RootNamespace>Aura.Runtime.DotNet.Fixture</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Aura.Runtime.DotNet.Abstractions/Aura.Runtime.DotNet.Abstractions.csproj" />
+  </ItemGroup>
+</Project>

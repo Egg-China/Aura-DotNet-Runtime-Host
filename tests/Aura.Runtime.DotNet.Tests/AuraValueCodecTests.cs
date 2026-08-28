@@ -1,0 +1,75 @@
+using Aura.Runtime.DotNet;
+using Xunit;
+
+namespace Aura.Runtime.DotNet.Tests;
+
+public sealed class AuraValueCodecTests
+{
+    public static TheoryData<AuraValue, byte[]> GoldenValues => new()
+    {
+        { AuraValue.Null, [0x92, 0x00, 0xc0] },
+        { AuraValue.FromBoolean(true), [0x92, 0x01, 0xc3] },
+        { AuraValue.FromInteger(-2), [0x92, 0x02, 0xd3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe] },
+        { AuraValue.FromDouble(1.5), [0x92, 0x03, 0xcb, 0x3f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
+        { AuraValue.FromString("é"), [0x92, 0x04, 0xdb, 0x00, 0x00, 0x00, 0x02, 0xc3, 0xa9] },
+        { AuraValue.FromBytes([0x00, 0xff]), [0x92, 0x05, 0xc6, 0x00, 0x00, 0x00, 0x02, 0x00, 0xff] },
+        {
+            AuraValue.FromArray([AuraValue.Null, AuraValue.FromBoolean(false)]),
+            [0x92, 0x06, 0xdd, 0x00, 0x00, 0x00, 0x02, 0x92, 0x00, 0xc0, 0x92, 0x01, 0xc2]
+        },
+        {
+            AuraValue.FromMap([new("x", AuraValue.FromInteger(7))]),
+            [0x92, 0x07, 0xdd, 0x00, 0x00, 0x00, 0x01, 0x92, 0xdb, 0x00, 0x00, 0x00, 0x01, 0x78,
+                0x92, 0x02, 0xd3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07]
+        },
+        {
+            AuraValue.FromHandle(new AuraHandle(5, 9, "document")),
+            [0x92, 0x08, 0x93, 0xcf, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05,
+                0xcf, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x09,
+                0xdb, 0x00, 0x00, 0x00, 0x08, 0x64, 0x6f, 0x63, 0x75, 0x6d, 0x65, 0x6e, 0x74]
+        },
+        {
+            AuraValue.FromError(AuraErrorCode.PermissionDenied),
+            [0x92, 0x09, 0xdb, 0x00, 0x00, 0x00, 0x11, 0x70, 0x65, 0x72, 0x6d, 0x69, 0x73, 0x73,
+                0x69, 0x6f, 0x6e, 0x2d, 0x64, 0x65, 0x6e, 0x69, 0x65, 0x64]
+        },
+    };
+
+    [Theory]
+    [MemberData(nameof(GoldenValues))]
+    public void EncodeMatchesBridgeValueV1GoldenVectors(AuraValue value, byte[] expected)
+    {
+        Assert.Equal(expected, AuraValueCodec.Encode(value));
+    }
+
+    [Theory]
+    [MemberData(nameof(GoldenValues))]
+    public void DecodeMatchesBridgeValueV1GoldenVectors(AuraValue expected, byte[] wire)
+    {
+        Assert.Equal(expected, AuraValueCodec.Decode(wire));
+    }
+
+    [Fact]
+    public void MapRejectsDuplicateKeys()
+    {
+        Assert.Throws<ArgumentException>(() => AuraValue.FromMap([
+            new("same", AuraValue.Null),
+            new("same", AuraValue.FromBoolean(true)),
+        ]));
+    }
+
+    [Theory]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    public void DoubleRejectsNonFiniteValues(double value)
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => AuraValue.FromDouble(value));
+    }
+
+    [Fact]
+    public void DecodeRejectsTrailingBytes()
+    {
+        Assert.Throws<InvalidDataException>(() => AuraValueCodec.Decode([0x92, 0x00, 0xc0, 0x00]));
+    }
+}
