@@ -1,0 +1,36 @@
+name: Publish NuGet abstractions
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore
+        run: dotnet restore src/Aura.Runtime.DotNet.Abstractions/Aura.Runtime.DotNet.Abstractions.csproj
+      - name: Pack
+        run: >-
+          dotnet pack src/Aura.Runtime.DotNet.Abstractions/Aura.Runtime.DotNet.Abstractions.csproj
+          -c Release --no-restore -o .artifacts/nuget -p:ContinuousIntegrationBuild=true
+      - name: Exchange GitHub OIDC token for a temporary NuGet API key
+        id: login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: ACX
+      - name: Publish
+        shell: pwsh
+        run: >-
+          dotnet nuget push .artifacts/nuget/Aura.Runtime.DotNet.Abstractions.0.1.0-beta.1.nupkg
+          --api-key '${{ steps.login.outputs.NUGET_API_KEY }}'
+          --source https://api.nuget.org/v3/index.json
