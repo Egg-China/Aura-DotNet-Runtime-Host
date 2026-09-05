@@ -13,6 +13,8 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Aura.Runtime.DotNet.Abstractions/Aura.Runtime.DotNet.Abstractions.csproj" />
     <ProjectReference Include="../../src/Aura.Runtime.DotNet.Host/Aura.Runtime.DotNet.Host.csproj" />
+    <ProjectReference Include="../../examples/launch-hook/Aura.DotNet.LaunchHook.csproj"
+                      ReferenceOutputAssembly="false" />
     <ProjectReference Include="../Fixtures/Aura.Runtime.DotNet.Fixture/Aura.Runtime.DotNet.Fixture.csproj"
                       ReferenceOutputAssembly="false" />
   </ItemGroup>

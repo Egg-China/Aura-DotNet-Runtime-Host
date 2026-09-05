@@ -1,9 +1,9 @@
 {
   "schemaVersion": 5,
   "id": "dev.hmclce.example.dotnet.launch-hook",
-  "name": "Aura .NET Game Launch Hook Plugin",
+  "name": "Aura .NET Hook and Patch Plugin",
   "version": "1.0.0",
-  "description": "Isolated .NET example that observes the before-game-launch Hook.",
+  "description": "Isolated .NET example that observes a launch Hook and a launcher method Patch.",
   "author": "Aura Launcher Community",
   "type": "java",
   "runtime": "dotnet",
@@ -13,9 +13,14 @@
   "executionMode": "isolated",
   "runtimeProvider": "dev.hmclce.runtime.dotnet-host",
   "dependencies": [],
-  "permissions": ["launcher-hook"],
-  "requiredPermissions": ["launcher-hook"],
+  "permissions": ["launcher-hook", "launcher-patch"],
+  "requiredPermissions": ["launcher-hook", "launcher-patch"],
   "hooks": ["before-game-launch"],
-  "patches": [],
+  "patches": [{
+    "target": "org.jackhuang.hmcl.util.io.FileUtils",
+    "method": "getName",
+    "type": "after",
+    "parameters": ["java.nio.file.Path"]
+  }],
   "launcherVersion": ">=27.1-0-next"
 }

@@ -2,7 +2,9 @@
 
 Aura .NET Runtime Host is an optional schema-v5 runtime provider for Aura Launcher. Each .NET 10 payload runs in its own supervised process and collectible `AssemblyLoadContext`.
 
-The compatibility plugin ID is `dev.hmclce.runtime.dotnet-host`. The Host supports Bridge ABI 1, hooks, native payload dependencies, and isolated execution only.
+The compatibility plugin ID is `dev.hmclce.runtime.dotnet-host`. The Host supports Bridge ABI 1, Hooks, declarative
+Patches, native payload dependencies, and isolated execution only. Runtime Patch callbacks use the canonical
+`aura.patch.v1` Bridge Value v1 exchange; JVM capability tokens remain inside Aura Launcher.
 
 ## Requirements
 
